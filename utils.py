@@ -1,7 +1,7 @@
 import os
-import numpy as np
-import requests
 import gdown
+import requests
+import numpy as np
 
 
 try:
@@ -9,6 +9,8 @@ try:
 except ImportError:
     def tqdm(x, total, unit): return x
     print('**** Could not import tqdm. Please install tqdm for download progressbars! (pip install tqdm) ****')
+
+
 
 
 def drive_download(idx, output):

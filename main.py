@@ -1,5 +1,7 @@
+import torch
 import utils
 import argparse
+from model import ResNet
 from trainer import Trainer 
 from dataset import JPDDataset
 from torch.utils.data import DataLoader
@@ -9,7 +11,9 @@ def config():
     parser = argparse.ArgumentParser()
     parser.add_argument('--dataset', help='Dataset use for training. Example: k10 or k49 for 10 or 49 classes corresponding', default='k49')
     parser.add_argument('--epochs', default=10)
-    parser.add_argument('--batch_size', default=64)
+    parser.add_argument("--input_dim", default=1)
+    parser.add_argument("--num_classes", default=49)
+    parser.add_argument('--batch_size', default=4096)
     parser.add_argument('--learning_rate', default=0.005)
     parser.add_argument('--checkpoint', default='./checkpoint.pt')
     args = parser.parse_args()
@@ -27,8 +31,9 @@ def create_loader(cf):
         T.ToTensor(),
         T.Normalize(train_images.mean(), train_images.std())
     ])
-    train_dataset = JPDDataset(train_images, train_labels, transform)
-    test_dataset = JPDDataset(test_images, test_labels)
+    train_dataset = JPDDataset(train_images.tolist(), train_labels.tolist(), transform)
+    test_dataset = JPDDataset(test_images.tolist(), test_labels.tolist())
+    # return train_dataset, test_dataset
     print(f"[+] Train sample: {len(train_dataset)} - Test sample: {len(test_dataset)}")
     train_loader = DataLoader(train_dataset, batch_size=cf.batch_size, shuffle=True, pin_memory=True)
     test_loader = DataLoader(test_dataset, batch_size=cf.batch_size*2, shuffle=True, pin_memory=True)
@@ -38,8 +43,11 @@ def create_loader(cf):
 def main():
     cf = config()
     train_loader, test_loader = create_loader(cf)
-    
-
+    model = ResNet(cf)
+    criterion = torch.nn.CrossEntropyLoss()
+    optimizer = torch.optim.Adam(model.parameters(), lr=cf.learning_rate)
+    trainer = Trainer(model, optimizer, criterion)
+    trainer.fit(train_loader, test_loader, cf.epoch, cf.checkpoint)
 
 if __name__ == "__main__":
     main()

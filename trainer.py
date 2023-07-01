@@ -1,7 +1,7 @@
 import sys
 import time 
 import torch
-import timedelta
+from datetime import timedelta
 import sklearn.metrics as metrics
 # from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 
@@ -74,7 +74,7 @@ class Trainer:
 
             images = images.to(self.device)
             labels = labels.to(self.device)
-            with torch.set_grad_enable(fw_mode=="train"):
+            with torch.set_grad_enabled(fw_mode=="train"):
                 logits = self.model(images)
                 loss = self.criterion(logits, labels)
 
@@ -88,8 +88,6 @@ class Trainer:
             cache["predicts"] += logits.softmax(dim=-1).argmax(dim=-1).tolist()
             cache["labels"] += labels.tolist()
 
-            log_info = [str(k) + str(v) for k, v in log_info.items()]
-            log_info = " - ".join(log_info)
             print("\r", end="")
             print(f"{fw_mode.capitalize()} step: {idx} / {N}", end="" if idx != N else "\n")
 
@@ -109,7 +107,7 @@ class Trainer:
             logs = []
             current_lr = f": {self.optimizer.param_groups[0]['lr']:.5}"
             try:
-                self.forward(train_loader)
+                self.forward(train_loader, "train")
                 train_loss = round(self.cache["train_loss"][-1], 5)
                 train_acc = [str(k) + ": " + str(v) for k, v in self.cache["train_acc"][-1].items()]
                 train_acc = " - ".join(train_acc)
@@ -118,7 +116,7 @@ class Trainer:
                 sys.exit()
             if valid_loader is not None:
                 try:
-                    self.forward(valid_loader, "Valid")
+                    self.forward(valid_loader, "valid")
                     valid_loss = round(self.cache["valid_loss"][-1], 5)
                     valid_acc = [str(k) + ": " + str(v) for k, v in self.cache["valid_acc"][-1].items()]
                     valid_acc = " - ".join(valid_acc)
