@@ -11,8 +11,6 @@ except ImportError:
     print('**** Could not import tqdm. Please install tqdm for download progressbars! (pip install tqdm) ****')
 
 
-
-
 def drive_download(idx, output):
     url = 'https://drive.google.com/uc?id=' + idx
     gdown.download(url, output, quiet=False)

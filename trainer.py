@@ -26,14 +26,18 @@ class Trainer:
         }
     #
 
-    def load_checkpoint(self, path, load_optimizer=False, load_scheduler=False):
+    def load_checkpoint(self, path, only_load_backbone=False, load_optimizer=False, load_scheduler=False):
         params = torch.load(path)
-        self.model.load_state_dict(params["model"])
-        if load_optimizer:
-            self.optimizer.load_state_dict(params["optimizer"])
-        if self.scheduler is not None and load_scheduler:
-            self.scheduler.load_state_dict(params["scheduler"])
-        self.cache = params["cache"]
+        if only_load_backbone:
+            params = params["model"]
+            self.model.backbone.load_state_dict(params)
+        else:
+            self.model.load_state_dict(params["model"])
+            if load_optimizer:
+                self.optimizer.load_state_dict(params["optimizer"])
+            if self.scheduler is not None and load_scheduler:
+                self.scheduler.load_state_dict(params["scheduler"])
+            self.cache = params["cache"]
         print("[+] Model load successful")
     #
 
