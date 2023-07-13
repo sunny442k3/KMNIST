@@ -2,8 +2,7 @@ import sys
 import torch
 import utils
 import argparse
-from model import CNNModelOptimal, Backbone, CNN
-from resnet import ResNet
+from model import CNNModelOptimal
 from trainer import Trainer 
 from dataset import JPDDataset
 from torch.utils.data import DataLoader
@@ -17,14 +16,12 @@ def config():
     parser.add_argument("--input_dim", default=1, type=int)
     parser.add_argument("--num_classes", default=49, type=int)
     parser.add_argument('--batch_size', default=64, type=int)
-    parser.add_argument('--dropout', default=0.3, type=float)
     parser.add_argument('--backbone', default="cnn", help="Name of pretrained model. Example: cnn or rescnn")
     parser.add_argument('--learning_rate', default=0.0001, type=float)
     parser.add_argument('--checkpoint_path', default='./checkpoint.pt')
     parser.add_argument('--query_weight', default="./dataset/query_embedding_k49.pt")
-    parser.add_argument('--freeze_backbone', action="store_true")
+    parser.add_argument('--freeze_query', action="store_true")
     parser.add_argument('--load_pretrained_weight', default="", type=str)
-    parser.add_argument('--load_backbone_weight', default="", type=str)
     args = parser.parse_args()
     return args
 
@@ -56,11 +53,8 @@ def create_loader(cf):
 def main():
     cf = config()
     train_loader, test_loader = create_loader(cf)
-    if cf.train_backbone:
-        assert len(cf.backbone.strip()), "Please give name of backbone when active train_backbone mode"
-        model = CNN(cf.num_classes)
-    else:
-        model = CNNModelOptimal(cf)
+   
+    model = CNNModelOptimal(cf)
     
     print("Number of parameters:", sum(p.numel() for p in model.parameters()))
     criterion = torch.nn.CrossEntropyLoss()

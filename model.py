@@ -33,10 +33,10 @@ class ResCNN(nn.Module):
         self.input_block = nn.Sequential(
             nn.Conv2d(1, 64, kernel_size=3, stride=1, padding=1, bias=False),
             nn.BatchNorm2d(64),
-             nn.ReLU(inplace=True),
+            nn.ReLU(inplace=True),
             nn.MaxPool2d(kernel_size=3, stride=1, padding=1, dilation=1, ceil_mode=False)
         )
-        self.cnn_block1 = BasicBlock(64, 64, [5, 3], [1, 1], [2, 1]),
+        self.cnn_block1 = BasicBlock(64, 64, [5, 3], [1, 1], [2, 1])
         self.switch1 = nn.Sequential(
             nn.Conv2d(64, 64, kernel_size=1, stride=1, padding=0),
             nn.ReLU(),
@@ -62,17 +62,17 @@ class CNN(nn.Module):
     def __init__(self):
         super().__init__()
         self.cnn_block1 = nn.Sequential(
-            nn.Conv2d(in_channels=1, out_channels=64, kernel_size=5, stride=1, padding=0, dilation=1, groups=1, bias=False)
+            nn.Conv2d(in_channels=1, out_channels=64, kernel_size=5, stride=1, padding=0, dilation=1, groups=1, bias=False),
             nn.BatchNorm2d(num_features=64),
             nn.ReLU()
         )
         self.cnn_block2 = nn.Sequential(
-            nn.Conv2d(in_channels=64, out_channels=128, kernel_size=5, stride=1, padding=0, dilation=1, groups=1, bias=False)
+            nn.Conv2d(in_channels=64, out_channels=128, kernel_size=5, stride=1, padding=0, dilation=1, groups=1, bias=False),
             nn.BatchNorm2d(num_features=128),
             nn.ReLU()
         )
         self.cnn_block3 = nn.Sequential(
-            nn.Conv2d(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=0, dilation=1, groups=1, bias=False)
+            nn.Conv2d(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=0, dilation=1, groups=1, bias=False),
             nn.BatchNorm2d(num_features=128),
             nn.ReLU()
         )
