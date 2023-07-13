@@ -1,5 +1,5 @@
 from typing import Optional
-
+import sys
 import torch
 from torch import nn, Tensor
 from torch.nn.modules.transformer import _get_activation_fn
@@ -68,8 +68,8 @@ class MLDecoder(nn.Module):
     def __init__(
             self, 
             num_classes=49, 
-            n_heads=8,
-            decoder_layers=2, 
+            n_heads=4,
+            decoder_layers=1, 
             d_ff=2048, 
             decoder_embedding=512,
             hidden_dim=2048,

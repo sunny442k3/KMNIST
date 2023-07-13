@@ -16,7 +16,7 @@ class Trainer:
         self.optimizer = optimizer
         self.criterion = criterion
         self.scheduler = scheduler
-
+        self.best_acc = 0
         self.cache = {
             "train_loss": [],
             "valid_loss": [],
@@ -42,25 +42,29 @@ class Trainer:
     #
 
     def save_checkpoint(self, path):
-        params = {
-            "model": self.model.state_dict(),
-            "optimizer": self.optimizer.state_dict(),
-            "scheduler": None if self.scheduler is None else self.scheduler.state_dict(),
-            "cache": self.cache
-        }
-        torch.save(params, path)
+        acc = self.cache["valid_acc"][-1]["accuracy"]
+        if acc >= self.best_acc:
+            params = {
+                "model": self.model.state_dict(),
+                "optimizer": self.optimizer.state_dict(),
+                "scheduler": None if self.scheduler is None else self.scheduler.state_dict(),
+                "cache": self.cache
+            }
+            torch.save(params, path)
+            self.best_acc = acc
+            print("[+] Save checkpoint successfully")
     #
 
     def compute_metrics(self, preds, labels):
-        accuracy = metrics.accuracy_score(labels, preds)
+        accuracy = sum([1 for i, j in zip(preds, labels) if i == j]) / len(labels)
         precision = metrics.precision_score(labels, preds, average='micro')
         recall = metrics.recall_score(labels, preds, average='micro')
         f1 = metrics.f1_score(labels, preds, average='micro')
         return {
-            'accuracy': round(accuracy, 3),
-            'precision': round(precision, 3),
-            'recall': round(recall, 3),
-            'f1': round(f1, 3),
+            'accuracy': round(accuracy, 7),
+            'precision': round(precision, 7),
+            'recall': round(recall, 7),
+            'f1': round(f1, 7),
         }
     #
 
@@ -70,7 +74,7 @@ class Trainer:
         else:
             self.model.eval()
 
-        cache = {"loss": [], "predicts": [], "labels": []}            
+        cache = {"loss": [], "acc": []}            
         N = len(dataloader)
         for idx, (images, labels) in enumerate(dataloader, 1):
             if fw_mode == "train":
@@ -89,14 +93,24 @@ class Trainer:
                         self.scheduler.step()
 
             cache["loss"].append(loss.item())
-            cache["predicts"] += logits.softmax(dim=-1).argmax(dim=-1).tolist()
-            cache["labels"] += labels.tolist()
-
+            # cache["predicts"] += logits.softmax(dim=-1).argmax(dim=-1).tolist()
+            # cache["labels"] += labels.tolist()
+            acc = self.compute_metrics(logits.softmax(dim=-1).argmax(dim=-1).tolist(), labels.tolist())
+            cache["acc"].append(acc)
             print("\r", end="")
-            print(f"{fw_mode.capitalize()} step: {idx} / {N}", end="" if idx != N else "\n")
+            print(f"{fw_mode.capitalize()} step: {idx} / {N} - Acc: {acc['accuracy']}", end="" if idx != N else "\n")
 
         loss = sum(cache["loss"]) / len(cache["loss"])
-        acc = self.compute_metrics(cache["predicts"], cache["labels"])
+
+        get_col = lambda x: [i[x] for i in cache["acc"]]
+        acc = [[i["accuracy"] for i in cache["acc"]], [i["precision"] for i in cache["acc"]], [i["recall"] for i in cache["acc"]], [i["f1"] for i in cache["acc"]]]
+        acc = {
+            "accuracy": round(sum(acc[0]) / len(acc[0]), 7),
+            "precision": round(sum(acc[1]) / len(acc[1]), 7),
+            "recall": round(sum(acc[2]) / len(acc[2]), 7),
+            "f1": round(sum(acc[3]) / len(acc[3]), 7)
+        }
+        # acc = self.compute_metrics(cache["predicts"], cache["labels"])
         self.cache[f"{fw_mode}_loss"].append(loss)
         self.cache[f"{fw_mode}_acc"].append(acc)
     #
@@ -109,7 +123,7 @@ class Trainer:
             start_time = time.time()
             print(f"Epoch: {epoch}")
             logs = []
-            current_lr = f": {self.optimizer.param_groups[0]['lr']:.5}"
+            current_lr = f": {self.optimizer.param_groups[0]['lr']:e}"
             try:
                 self.forward(train_loader, "train")
                 train_loss = round(self.cache["train_loss"][-1], 5)
