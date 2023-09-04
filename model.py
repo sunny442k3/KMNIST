@@ -98,7 +98,7 @@ class CNNModelOptimal(nn.Module):
             num_classes=cf.num_classes, 
             query_weight=cf.query_weight, 
             hidden_dim=128, 
-            freeze_query=cf.freeze_query
+            # freeze_query=cf.freeze_query
         )
 
     
